@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegBaseDataMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegBaseData">
+		<id column="fd_id" property="fdId" />
+		<result column="type" property="type" />
+		<result column="typecn" property="typecn" />
+		<result column="code" property="code" />
+		<result column="name" property="name" />
+		<result column="name2" property="name2" />
+		<result column="status" property="status" />
+		<result column="setid" property="setid" />
+		<result column="syncid" property="syncid" />
+		<result column="tablename" property="tablename" />
+		<result column="datafrom" property="datafrom" />
+		<result column="remark" property="remark" />
+	</resultMap>
+
+</mapper>

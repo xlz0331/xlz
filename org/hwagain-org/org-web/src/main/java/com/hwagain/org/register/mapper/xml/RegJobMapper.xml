@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegJobMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegJob">
+		<id column="fd_id" property="fdId" />
+		<result column="company_id" property="companyId" />
+		<result column="position_nbr" property="positionNbr" />
+		<result column="position" property="position" />
+		<result column="system_id" property="systemId" />
+		<result column="system" property="system" />
+		<result column="upper_nbr" property="upperNbr" />
+		<result column="upper_posi" property="upperPosi" />
+		<result column="upper_no" property="upperNo" />
+		<result column="upper_name" property="upperName" />
+		<result column="dept_id" property="deptId" />
+		<result column="dept" property="dept" />
+		<result column="workshop_id" property="workshopId" />
+		<result column="workshop" property="workshop" />
+		<result column="classes_id" property="classesId" />
+		<result column="classes" property="classes" />
+		<result column="section_id" property="sectionId" />
+		<result column="section" property="section" />
+		<result column="job_id" property="jobId" />
+		<result column="job_name" property="jobName" />
+		<result column="job_level" property="jobLevel" />
+		<result column="tryrange" property="tryrange" />
+		<result column="emptype" property="emptype" />
+		<result column="empattribute" property="empattribute" />
+		<result column="scope" property="scope" />
+		<result column="institution_id" property="institutionId" />
+		<result column="institution" property="institution" />
+		<result column="shiftcode" property="shiftcode" />
+		<result column="shiftname" property="shiftname" />
+		<result column="pertype" property="pertype" />
+		<result column="operate" property="operate" />
+		<result column="reason" property="reason" />
+		<result column="is_gps" property="isGps" />
+		<result column="tech_jobcode" property="techJobcode" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+	</resultMap>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.job.mapper.OrgJobHistoryMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.job.entity.OrgJobHistory">
+		<id column="id" property="id" />
+		<result column="fd_id" property="fdId" />
+		<result column="dept_id" property="deptId" />
+		<result column="dept_code" property="deptCode" />
+		<result column="dept_version" property="deptVersion" />
+		<result column="job_name" property="jobName" />
+		<result column="job_code" property="jobCode" />
+		<result column="job_type" property="jobType" />
+		<result column="parent_id" property="parentId" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+		<result column="manag_depts" property="managDepts" />
+		<result column="company" property="company" />
+		<result column="is_manage" property="isManage" />
+		<result column="remark" property="remark" />
+		<result column="max_compile" property="maxCompile" />
+		<result column="max_people" property="maxPeople" />
+		<result column="order_value" property="orderValue" />
+	</resultMap>
+
+	<select id="findJobByParam" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgExcel">
+		select job_code id,job_name label,dept_id parentId,manag_depts job,
+		job_type typeCode,parent_id parentCode,remark,max_compile maxCompile,
+		max_people maxPeople,fd_id dataid
+		from org_job_history
+		<where>
+			company = #{company} 
+			and dept_version = #{version} 
+			and is_delete = false
+		</where>
+	</select>
+</mapper>

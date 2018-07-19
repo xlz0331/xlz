@@ -1,0 +1,32 @@
+package com.hwagain.org.register.service;
+
+import com.hwagain.org.register.entity.RegPersonalEmployWay;
+import com.hwagain.org.register.dto.RegPersonalEmployWayDto;
+import com.hwagain.framework.mybatisplus.service.IService;
+import java.util.List;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+public interface IRegPersonalEmployWayService extends IService<RegPersonalEmployWay> {
+	
+	public List<RegPersonalEmployWayDto> findAll() throws CustomException; 
+	
+	public RegPersonalEmployWayDto findOne(String fdId) throws CustomException;
+	
+	public RegPersonalEmployWayDto save(RegPersonalEmployWayDto dto) throws CustomException;
+	
+	public RegPersonalEmployWayDto update(RegPersonalEmployWayDto dto) throws CustomException;
+	
+	public Boolean deleteByIds(String ids) throws CustomException;
+	
+	public PageDto<RegPersonalEmployWayDto> findByPage(RegPersonalEmployWayDto dto,PageVO pageVo) throws CustomException;
+}

@@ -1,0 +1,37 @@
+package com.hwagain.org.register.service;
+
+import com.hwagain.org.register.entity.RegJob;
+import com.hwagain.org.register.dto.RegJobDto;
+import com.hwagain.org.register.dto.RegJobUpperDto;
+import com.hwagain.framework.mybatisplus.service.IService;
+import java.util.List;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+public interface IRegJobService extends IService<RegJob> {
+	
+	public List<RegJobDto> findAll() throws CustomException; 
+	
+	public RegJobDto findOne(String fdId) throws CustomException;
+	
+	public RegJobDto save(RegJobDto dto) throws CustomException;
+	
+	public RegJobDto update(RegJobDto dto) throws CustomException;
+	
+	public Boolean deleteByIds(String ids) throws CustomException;
+	
+	public PageDto<RegJobDto> findByPage(RegJobDto dto,PageVO pageVo) throws CustomException;
+	
+	public RegJobDto getAndInit(String personalId) throws CustomException;
+	
+	public RegJobUpperDto getUpperInfo(String jobCode) throws CustomException;
+}

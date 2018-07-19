@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.dept.mapper.OrgDeptHistoryMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.dept.entity.OrgDeptHistory">
+		<id column="id" property="id" />
+		<result column="fd_id" property="fdId" />
+		<result column="EFFDT" property="effdt" />
+		<result column="DEPTID" property="deptid" />
+		<result column="DESCR" property="descr" />
+		<result column="DESCRSHORT" property="descrshort" />
+		<result column="COMPANY" property="company" />
+		<result column="hierarchy_id" property="hierarchyId" />
+		<result column="parent_id" property="parentId" />
+		<result column="parent_DEPTID" property="parentDEPTID" />
+		<result column="version" property="version" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+		<result column="type_code" property="typeCode" />
+		<result column="max_people" property="maxPeople" />
+		<result column="order_value" property="orderValue" />
+	</resultMap>
+
+	<select id="findMaxVersion" resultType="Integer">
+		select IFNULL(MAX(version),0) from org_dept_history where company=#{company} limit 1
+	</select>
+	
+	<insert id="saveDeptHistory">
+		insert into org_dept_history(
+			fd_id,
+			EFFDT,
+			DEPTID,
+			DESCR,
+			DESCRSHORT,
+			COMPANY,
+			max_people,
+			hierarchy_id,
+			parent_id,
+			parent_DEPTID,
+			version,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			type_code,
+			job_id,
+			order_value
+		) select 
+			fd_id,
+			EFFDT,
+			DEPTID,
+			DESCR,
+			DESCRSHORT,
+			COMPANY,
+			max_people,
+			hierarchy_id,
+			parent_id,
+			parent_DEPTID,
+			version,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			type_code,
+			job_id,
+			order_value
+		 from org_dept where company = #{company}
+	</insert>
+	<insert id="saveJobHistory">
+		INSERT INTO org_job_history (
+			fd_id,
+			dept_id,
+			dept_code,
+			dept_version,
+			job_name,
+			job_code,
+			job_type,
+			manag_depts,
+			parent_id,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			company,
+			is_manage,
+			remark,
+			max_compile,
+			max_people
+		) SELECT
+			fd_id,
+			dept_id,
+			dept_code,
+			dept_version,
+			job_name,
+			job_code,
+			job_type,
+			manag_depts,
+			parent_id,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			company,
+			is_manage,
+			remark,
+			max_compile,
+			max_people 
+		FROM
+			org_job where company = #{company}
+	</insert>
+	
+	<select id="findDeptByParam" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgExcel">
+		select fd_id id,DESCRSHORT label,parent_id parentId,job_id job,
+		job_id jobId,type_code typeCode,DEPTID code
+		from org_dept_history where company = #{company} and version = #{version} and type_code in
+		<foreach collection="typeCode" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+</mapper>

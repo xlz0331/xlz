@@ -1,0 +1,742 @@
+package com.hwagain.org.register.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import com.hwagain.org.register.entity.RegBaseData;
+import com.hwagain.org.register.entity.RegJob;
+import com.hwagain.org.register.entity.RegPeople;
+import com.hwagain.org.register.entity.RegPersonal;
+import com.hwagain.org.register.entity.RegPersonalCredentials;
+import com.hwagain.org.register.entity.RegPersonalEducation;
+import com.hwagain.org.register.entity.RegPersonalEmployWay;
+import com.hwagain.org.register.entity.RegPersonalExigence;
+import com.hwagain.org.register.entity.RegPersonalFamily;
+import com.hwagain.org.register.entity.RegPersonalWork;
+import com.hwagain.org.register.entity.RegWorkerInterview;
+import com.hwagain.org.register.dto.RegPersonalDto;
+import com.hwagain.org.register.mapper.RegPersonalMapper;
+import com.hwagain.org.register.service.IRegBaseDataService;
+import com.hwagain.org.register.service.IRegJobService;
+import com.hwagain.org.register.service.IRegPeopleService;
+import com.hwagain.org.register.service.IRegPersonalCredentialsService;
+import com.hwagain.org.register.service.IRegPersonalEducationService;
+import com.hwagain.org.register.service.IRegPersonalEmployWayService;
+import com.hwagain.org.register.service.IRegPersonalExigenceService;
+import com.hwagain.org.register.service.IRegPersonalFamilyService;
+import com.hwagain.org.register.service.IRegPersonalPictureFileService;
+import com.hwagain.org.register.service.IRegPersonalService;
+import com.hwagain.org.register.service.IRegPersonalWorkService;
+import com.hwagain.org.register.service.IRegWorkerInterviewService;
+import com.hwagain.org.register.util.PsCiUtils;
+import com.hwagain.org.register.util.SqlDbUtils;
+import com.hwagain.framework.mybatisplus.service.impl.ServiceImpl;
+import com.hwagain.framework.mybatisplus.toolkit.IdWorker;
+import com.hwagain.framework.security.common.util.UserUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import com.hwagain.framework.mybatisplus.mapper.CriterionWrapper;
+import com.hwagain.framework.mybatisplus.mapper.Wrapper;
+import com.hwagain.framework.mybatisplus.plugins.Page;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.util.ArraysUtil;
+
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
+
+/**
+ * <p>
+ * 入职注册-人员信息 服务实现类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+@Service("regPersonalService")
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+public class RegPersonalSaveServiceImpl extends ServiceImpl<RegPersonalMapper, RegPersonal> implements IRegPersonalService {
+
+	// entity转dto
+	static MapperFacade entityToDtoMapper;
+
+	// dto转entity
+	static MapperFacade dtoToEntityMapper;
+
+	@Autowired
+	IRegPeopleService regPeopleService;
+	@Autowired
+	IRegBaseDataService regBaseDataService;
+	@Autowired
+	IRegPersonalCredentialsService regPersonalCredentialsService;
+	@Autowired
+	IRegPersonalEmployWayService regPersonalEmployWayService;
+	@Autowired
+	IRegPersonalEducationService regPersonalEducationService;
+	@Autowired
+	IRegPersonalFamilyService regPersonalFamilyService;
+	@Autowired
+	IRegPersonalExigenceService regPersonalExigenceService;
+	@Autowired
+	IRegPersonalWorkService regPersonalWorkService;
+	@Autowired
+	IRegJobService regJobService;
+	@Autowired
+	IRegWorkerInterviewService regWorkerInterviewService;
+	
+
+	static {
+		MapperFactory factory = new DefaultMapperFactory.Builder().build();
+		factory.classMap(RegPersonal.class, RegPersonalDto.class).byDefault().register();
+		entityToDtoMapper = factory.getMapperFacade();
+
+		MapperFactory factorytwo = new DefaultMapperFactory.Builder().build();
+		factorytwo.classMap(RegPersonalDto.class, RegPersonal.class).byDefault().register();
+		dtoToEntityMapper = factorytwo.getMapperFacade();
+	}
+
+	@Override
+	public List<RegPersonalDto> findAll() {
+		Wrapper<RegPersonal> wrapper = new CriterionWrapper<RegPersonal>(RegPersonal.class);
+		List<RegPersonal> list = super.selectList(wrapper);
+		return entityToDtoMapper.mapAsList(list, RegPersonalDto.class);
+	}
+
+	@Override
+	public RegPersonalDto findOne(String fdId) {
+		return entityToDtoMapper.map(super.selectById(fdId), RegPersonalDto.class);
+	}
+
+	@Override
+	public RegPersonalDto save(RegPersonalDto dto) {
+
+		dto.setDocCreateId(UserUtils.getUserId());
+		dto.setDocCreateTime(new Date());
+
+		// RegPersonal entity = dtoToEntityMapper.map(dto, RegPersonal.class);
+		// super.insert(entity);
+		return dto;
+	}
+
+	@Override
+	public String update(RegPersonalDto dto) {
+
+		Assert.isTrue(null != dto.getName() && !dto.getName().isEmpty(), "姓名不能为空");
+		Assert.isTrue(null != dto.getSex() && !dto.getSex().isEmpty(), "性别不能为空");
+		Assert.isTrue(null != dto.getNation() && !dto.getNation().isEmpty(), "民族不能为空");
+		Assert.isTrue(null != dto.getNid() && !dto.getNid().isEmpty(), "身份证号码不能为空");
+		Assert.isTrue(null != dto.getAddress() && !dto.getAddress().isEmpty(), "身份证地址不能为空");
+		Assert.isTrue(null != dto.getMarry() && !dto.getMarry().isEmpty(), "婚姻状况不能为空");
+		Assert.isTrue(null != dto.getOnlyChild() && !dto.getOnlyChild().isEmpty(), "是否独生子女不能为空");
+		Assert.isTrue(null != dto.getNativePlace() && !dto.getNativePlace().isEmpty(), "籍贯不能为空");
+		Assert.isTrue(null != dto.getCountry() && !dto.getCountry().isEmpty(), "国家地区不能为空");
+		Assert.isTrue(null != dto.getBirthdate(), "出生日期不能为空");
+		Assert.isTrue(null != dto.getBirthProvince() && !dto.getBirthProvince().isEmpty(), "出生省份不能为空");
+		Assert.isTrue(null != dto.getBirthPlaceType() && !dto.getBirthPlaceType().isEmpty(), "出生地址类型不能为空");
+		Assert.isTrue(null != dto.getBirthPlace() && !dto.getBirthPlace().isEmpty(), "出生地点不能为空");
+		Assert.isTrue(null != dto.getHukouPlace() && !dto.getHukouPlace().isEmpty(), "户口所在地不能为空");
+		Assert.isTrue(null != dto.getHukouType() && !dto.getHukouType().isEmpty(), "户口类型不能为空");
+		Assert.isTrue(null != dto.getReligion() && !dto.getReligion().isEmpty(), "宗教信仰不能为空");
+		Assert.isTrue(null != dto.getPolitics() && !dto.getPolitics().isEmpty(), "政治面貌不能为空");
+		Assert.isTrue(null != dto.getBlood() && !dto.getBlood().isEmpty(), "血型不能为空");
+		Assert.isTrue(null != dto.getHeight() && !dto.getHeight().isEmpty(), "身高不能为空");
+		Assert.isTrue(null != dto.getVisionLeft() && !dto.getVisionLeft().isEmpty(), "视力（左）不能为空");
+		Assert.isTrue(null != dto.getVisionRight() && !dto.getVisionRight().isEmpty(), "视力（右）不能为空");
+		Assert.isTrue(null != dto.getFirstworkdate(), "首次参加工作时间不能为空");
+		Assert.isTrue(null != dto.getSpecialty() && !dto.getSpecialty().isEmpty(), "特长不能为空");
+		Assert.isTrue(null != dto.getPhone() && !dto.getPhone().isEmpty(), "联系电话不能为空");
+		Assert.isTrue(null != dto.getAddress3() && !dto.getAddress3().isEmpty(), "邮件送达地址不能为空");
+		Assert.isTrue(null != dto.getAddress2() && !dto.getAddress2().isEmpty(), "家庭地址不能为空");
+		Assert.isTrue(null != dto.getAddress1() && !dto.getAddress1().isEmpty(), "现居住地址不能为空");
+
+		Wrapper<RegPersonalExigence> wrapper3 = new CriterionWrapper<RegPersonalExigence>(RegPersonalExigence.class);
+		wrapper3.eq("is_delete", 0);
+		wrapper3.eq("personal_id", dto.getFdId());
+		wrapper3.and(" name is not null ");
+		wrapper3.and(" name !='' ");
+		wrapper3.and(" relation is not null ");
+		wrapper3.and(" relation  !='' ");
+		List<RegPersonalExigence> list3 = regPersonalExigenceService.selectList(wrapper3);
+		if (null == list3 || list3.isEmpty()) {
+			Assert.isTrue(false, "请添加紧急联系人");
+		}
+
+		// Wrapper<RegPersonalFamily> wrapper2 = new
+		// CriterionWrapper<RegPersonalFamily>(RegPersonalFamily.class);
+		// wrapper2.eq("is_delete", 0);
+		// wrapper2.eq("personal_id", dto.getFdId());
+		// List<RegPersonalFamily> list2 =
+		// regPersonalFamilyService.selectList(wrapper2);
+		// if (null == list2 || list2.isEmpty()) {
+		// Assert.isTrue(false, "请添加家庭成员");
+		// }
+
+		Wrapper<RegPersonalEducation> wrapper1 = new CriterionWrapper<RegPersonalEducation>(RegPersonalEducation.class);
+		wrapper1.eq("is_delete", 0);
+		wrapper1.eq("personal_id", dto.getFdId());
+		wrapper1.eq("typename", "统招学历");
+		// List<RegPersonalEducation> list1 =
+		// regPersonalEducationService.selectList(wrapper1);
+		// if (null == list1 || list1.isEmpty()) {
+		// Assert.isTrue(false, "请添加统计学历");
+		// } else {
+		// for (RegPersonalEducation eu : list1) {
+		// Assert.isTrue(null != eu.getSchool() && !eu.getSchool().isEmpty(),
+		// "学校名称不能为空");
+		// }
+		// }
+
+		// 计算最高学历
+		dto.setHighestEduc("03"); // 默认:03-初中
+		RegPersonalEducation edu1 = regPersonalEducationService.selectFirst(wrapper1);
+		if (null != edu1) {
+			Wrapper<RegBaseData> wrapperBase = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+			wrapperBase.eq("typecn", "概要学历");
+			wrapperBase.eq("code", edu1.getEducation());
+			RegBaseData base1 = regBaseDataService.selectFirst(wrapperBase);
+			if (null != base1) {
+				wrapperBase = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+				wrapperBase.eq("typecn", "学历");
+				wrapperBase.eq("name", base1.getName());
+				RegBaseData base2 = regBaseDataService.selectFirst(wrapperBase);
+				if (null != base2) {
+					dto.setHighestEduc(base2.getCode());
+				}
+			}
+		}
+
+		RegPeople peo = regPeopleService.selectById(dto.getFdId());
+		Assert.notNull(peo, "没有找到人员信息登记注册记录");
+		Assert.isTrue(peo.getIsTops() == 0, "记录已经传PS,不允许在编辑");
+
+		dto.setDocLastUpdateId(UserUtils.getUserId());
+		dto.setDocLastUpdateTime(new Date());
+		RegPersonal entity = dtoToEntityMapper.map(dto, RegPersonal.class);
+		super.updateAllById(entity);
+
+		peo.setIsRecord(9); // 履历信息-已录入
+		peo.setDocLastUpdateId(UserUtils.getUserId());
+		peo.setDocLastUpdateTime(new Date());
+		regPeopleService.updateById(peo);
+
+		if (null == dto.getEmial() || dto.getEmplid().isEmpty()) {
+
+			Integer ires = PsCiUtils.personalCreate(entity);
+			if (ires != 200)
+				return "创建PS系统员工工号失败";
+			String emplid = PsCiUtils.personalGetEmplidByNid(entity.getNid());
+			if (null == emplid || emplid.isEmpty())
+				return "获取PS系统员工工号失败,请尝试手动获取";
+
+			entity.setEmplid(emplid);
+			super.updateById(entity);
+
+			peo.setEmplid(emplid);
+			regPeopleService.updateById(peo);
+
+			if (null == peo.getIsEmpcar() || peo.getIsEmpcar() != 1) {
+				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+				String sEffDate = sf.format(peo.getDocCreateTime());
+				// 传考勤系统
+				SqlDbUtils.sentEmpInfoToC3(peo.getEmplid(), peo.getName(), peo.getSex(), "0", peo.getNid(), sEffDate);
+			}
+		}
+
+		return "保存成功";
+	}
+
+	@Override
+	public Boolean deleteByIds(String ids) {
+		String[] id = ids.split(";");
+		for (String sid : id) {
+			RegPersonal entity = super.selectById(sid);
+			entity.setIsDelete(1);
+			super.updateById(entity);
+		}
+		return true;
+		// return super.deleteBatchIds(Arrays.asList(id));
+	}
+
+	@Override
+	public PageDto<RegPersonalDto> findByPage(RegPersonalDto dto, PageVO pageVo) {
+		if (null != dto.getPageVo())
+			pageVo = dto.getPageVo();
+
+		PageDto<RegPersonalDto> pageDto = new PageDto<RegPersonalDto>();
+		pageDto.setPage(pageVo.getPage() + 1);
+		pageDto.setPageSize(pageVo.getPageSize());
+		Wrapper<RegPersonal> wrapper = new CriterionWrapper<RegPersonal>(RegPersonal.class);
+
+		wrapper.eq("is_delete", 0);
+		if (null != dto.getCompanyId() && !dto.getCompanyId().isEmpty())
+			wrapper.eq("company_id", dto.getCompanyId());
+		if (null != dto.getName() && !dto.getName().isEmpty())
+			wrapper.and("( name like '%" + dto.getCompanyId() + "%' )");
+
+		Page<RegPersonal> page = super.selectPage(new Page<RegPersonal>(pageDto.getPage(), pageDto.getPageSize()),
+				wrapper);
+		if (ArraysUtil.notEmpty(page.getRecords())) {
+			pageDto.setList(entityToDtoMapper.mapAsList(page.getRecords(), RegPersonalDto.class));
+		}
+		pageDto.setRowCount(page.getTotal());
+		return pageDto;
+	}
+
+	// 获取且初始化
+	@Override
+	public RegPersonalDto getAndInit(String personalId) {
+		Assert.isTrue(null != personalId && !personalId.isEmpty(), "人员信息id不能为空");
+
+		RegPeople peo = regPeopleService.selectById(personalId);
+		Assert.notNull(peo, "没有找到人员信息登记注册记录");
+
+		RegPersonal per = super.selectById(personalId);
+		if (null == per) {
+			String cuserid = UserUtils.getUserId();
+			Date doDate = new Date();
+
+			per = new RegPersonal();
+			per.setFdId(personalId);
+			per.setCompanyId(peo.getCompanyId());
+			per.setName(peo.getName());
+			per.setSex(peo.getSex());
+			// per.setNation(peo.getNation());
+			per.setNid(peo.getNid());
+			per.setAddress(peo.getAddress());
+			per.setBirthdate(peo.getBirthdate());
+			per.setPertype(peo.getPertype());
+			per.setIsDelete(0);
+			per.setDocCreateId(cuserid);
+			// 用于PS的生效日期，保持一致
+			per.setDocCreateTime(peo.getDocCreateTime());
+
+			// 民族-code
+			Wrapper<RegBaseData> wrapperBase = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+			wrapperBase.eq("typecn", "民族");
+			wrapperBase.eq("status", "A");
+			wrapperBase.eq("name", peo.getNation());
+			RegBaseData base1 = regBaseDataService.selectFirst(wrapperBase);
+			if (null != base1) {
+				per.setNation(base1.getCode());
+			} else {
+				wrapperBase = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+				wrapperBase.eq("typecn", "民族");
+				wrapperBase.eq("status", "A");
+				base1 = regBaseDataService.selectFirst(wrapperBase);
+				if (null != base1) {
+					per.setNation(base1.getCode());
+				}
+			}
+
+			super.insert(per);
+
+			// 证件信息
+			Wrapper<RegBaseData> wrapper = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+			wrapper.eq("status", "A");
+			wrapper.eq("typecn", "证件类型");
+			List<RegBaseData> list = regBaseDataService.selectList(wrapper);
+
+			for (RegBaseData b : list) {
+				RegPersonalCredentials c = new RegPersonalCredentials();
+				c.setFdId(String.valueOf(IdWorker.getId()));
+				c.setPersonalId(personalId);
+				c.setCode(b.getCode());
+				c.setName(b.getName());
+				c.setChecked(0);
+				c.setIsDelete(0);
+				c.setDocCreateId(cuserid);
+				c.setDocCreateTime(doDate);
+				regPersonalCredentialsService.insert(c);
+			}
+
+			// 求职途径
+			wrapper = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+			wrapper.eq("status", "A");
+			wrapper.eq("typecn", "求职途径");
+			list = regBaseDataService.selectList(wrapper);
+
+			for (RegBaseData b : list) {
+				RegPersonalEmployWay c = new RegPersonalEmployWay();
+				c.setFdId(String.valueOf(IdWorker.getId()));
+				c.setPersonalId(personalId);
+				c.setCode(b.getCode());
+				c.setName(b.getName());
+				c.setChecked(0);
+				c.setIsDelete(0);
+				c.setDocCreateId(cuserid);
+				c.setDocCreateTime(doDate);
+				regPersonalEmployWayService.insert(c);
+			}
+
+			// 统招学历
+			RegPersonalEducation x1 = new RegPersonalEducation();
+			x1.setFdId(String.valueOf(IdWorker.getId()));
+			x1.setPersonalId(personalId);
+			x1.setTypename("统招学历");
+			x1.setDocCreateId(cuserid);
+			x1.setDocCreateTime(doDate);
+			regPersonalEducationService.insert(x1);
+
+			// 非统招学历
+			RegPersonalEducation x2 = new RegPersonalEducation();
+			x2.setFdId(String.valueOf(IdWorker.getId()));
+			x2.setPersonalId(personalId);
+			x2.setTypename("非统招学历");
+			x2.setDocCreateId(cuserid);
+			x2.setDocCreateTime(doDate);
+			regPersonalEducationService.insert(x2);
+
+			// 工作经历-初始化3条
+			for (int i = 1; i <= 3; i++) {
+				RegPersonalWork w = new RegPersonalWork();
+				w.setFdId(String.valueOf(IdWorker.getId()));
+				w.setPersonalId(personalId);
+				w.setDocCreateId(cuserid);
+				w.setDocCreateTime(doDate);
+				regPersonalWorkService.insert(w);
+			}
+
+			// 家庭成员-初始化3条
+			for (int i = 1; i <= 3; i++) {
+				RegPersonalFamily f = new RegPersonalFamily();
+				f.setFdId(String.valueOf(IdWorker.getId()));
+				f.setPersonalId(personalId);
+				f.setDocCreateId(cuserid);
+				f.setDocCreateTime(doDate);
+				regPersonalFamilyService.insert(f);
+			}
+
+			// 紧急联系人-初始化3条
+			for (int i = 1; i <= 3; i++) {
+				RegPersonalExigence x = new RegPersonalExigence();
+				x.setFdId(String.valueOf(IdWorker.getId()));
+				x.setPersonalId(personalId);
+				x.setDocCreateId(cuserid);
+				x.setDocCreateTime(doDate);
+				regPersonalExigenceService.insert(x);
+			}
+
+		}
+
+		return entityToDtoMapper.map(per, RegPersonalDto.class);
+
+	}
+
+	// 测试创建PS人员记录
+	@Override
+	public String testPsCreateEmp(String personalId) {
+		Assert.isTrue(null != personalId && !personalId.isEmpty(), "人员信息id不能为空");
+		RegPersonal p = super.selectById(personalId);
+		Assert.notNull(p, "没有找到人员信息登记注册记录");
+		Assert.isTrue(null == p.getEmplid() || p.getEmplid().isEmpty(), "人员信息的员工编号已经存在");
+
+		RegPeople peo = regPeopleService.selectById(p.getFdId());
+		Assert.notNull(peo, "没有找到人员信息登记注册记录");
+		Assert.isTrue(peo.getIsTops() == 0, "记录已经传PS,不允许在编辑");
+		Assert.isTrue(null == peo.getEmplid() || peo.getEmplid().isEmpty(), "人员信息的员工编号已经存在");
+
+		if (null == p.getEmial() || p.getEmplid().isEmpty()) {
+
+			Integer ires = PsCiUtils.personalCreate(p);
+			if (ires != 200)
+				return "创建PS系统员工工号失败";
+			String emplid = PsCiUtils.personalGetEmplidByNid(p.getNid());
+			if (null == emplid || emplid.isEmpty())
+				return "获取PS系统员工工号失败,请尝试手动获取";
+
+			p.setEmplid(emplid);
+			super.updateById(p);
+			peo.setEmplid(emplid);
+			regPeopleService.updateById(peo);
+		}
+
+		return "成功";
+	}
+
+	// 测试创建PS人员记录
+	@Override
+	public String testSentEmpToKqxt(String personalId) {
+		Assert.isTrue(null != personalId && !personalId.isEmpty(), "人员信息id不能为空");
+		RegPersonal p = super.selectById(personalId);
+		Assert.notNull(p, "没有找到人员信息登记注册记录");
+		Assert.isTrue(null != p.getEmplid() && !p.getEmplid().isEmpty(), "人员信息没有员工编号");
+
+		RegPeople peo = regPeopleService.selectById(p.getFdId());
+		Assert.notNull(peo, "没有找到人员信息登记注册记录");
+		Assert.isTrue(peo.getIsTops() == 0, "记录已经传PS,不允许在编辑");
+		Assert.isTrue(null != peo.getEmplid() && !peo.getEmplid().isEmpty(), "人员信息没有员工编号");
+
+		if (null == peo.getIsEmpcar() || peo.getIsEmpcar() != 1) {
+			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+			String sEffDate = sf.format(peo.getDocCreateTime());
+			// 传考勤系统
+			String sSex = (null != peo.getSex() && peo.getSex().equals("M")) ? "男" : "女";
+			SqlDbUtils.sentEmpInfoToC3(peo.getEmplid(), peo.getName(), sSex, "0", peo.getNid(), sEffDate);
+		}
+
+		return "考勤系统成功";
+	}
+
+	// 根据身份证号码获取员工工号
+	@Override
+	public RegPersonal psGetEmplidByNid(String personalId) {
+		Assert.isTrue(null != personalId && !personalId.isEmpty(), "人员信息id不能为空");
+		RegPersonal p = super.selectById(personalId);
+		Assert.notNull(p, "没有找到人员信息登记注册记录");
+		Assert.isTrue(null == p.getEmplid() || p.getEmplid().isEmpty(), "人员信息的员工编号已经存在");
+
+		String sEmpid = PsCiUtils.personalGetEmplidByNid(p.getNid());
+
+		Assert.isTrue(null != sEmpid && !sEmpid.isEmpty(), "没有找到" + p.getNid() + "的员工工号");
+
+		p.setEmplid(sEmpid);
+		p.setDocLastUpdateId(UserUtils.getUserId());
+		p.setDocLastUpdateTime(new Date());
+		super.updateById(p);
+
+		RegPeople p2 = regPeopleService.selectById(personalId);
+		p2.setEmplid(sEmpid);
+		p2.setDocLastUpdateId(UserUtils.getUserId());
+		p2.setDocLastUpdateTime(new Date());
+		regPeopleService.updateById(p2);
+
+		return p;
+	}
+
+	// 将人员信息同步到PS
+	@Override
+	public String psSentPersonalData(String personalId) {
+		Assert.isTrue(null != personalId && !personalId.isEmpty(), "人员信息id不能为空");
+		RegPersonal p = super.selectById(personalId);
+		Assert.notNull(p, "没有找到人员信息登记注册记录");
+		Assert.isTrue(null != p.getEmplid() && !p.getEmplid().isEmpty(), "人员信息的员工编号不能为空");
+
+		RegPeople peo = regPeopleService.selectById(p.getFdId());
+		Assert.notNull(peo, "没有找到人员信息登记注册记录");
+		Assert.isTrue(peo.getIsTops() == 0, "记录已经传PS");
+		Assert.isTrue(null != peo.getEmplid() && !peo.getEmplid().isEmpty(), "人员信息登记注册记录的员工编号不能为空");
+
+		// 校验
+		Assert.isTrue(null != p.getName() && !p.getName().isEmpty(), "姓名不能为空");
+		Assert.isTrue(null != p.getSex() && !p.getSex().isEmpty(), "性别不能为空");
+		Assert.isTrue(null != p.getNation() && !p.getNation().isEmpty(), "民族不能为空");
+		Assert.isTrue(null != p.getNid() && !p.getNid().isEmpty(), "身份证号码不能为空");
+		Assert.isTrue(null != p.getAddress() && !p.getAddress().isEmpty(), "身份证地址不能为空");
+		Assert.isTrue(null != p.getMarry() && !p.getMarry().isEmpty(), "婚姻状况不能为空");
+		Assert.isTrue(null != p.getOnlyChild() && !p.getOnlyChild().isEmpty(), "是否独生子女不能为空");
+		Assert.isTrue(null != p.getNativePlace() && !p.getNativePlace().isEmpty(), "籍贯不能为空");
+		Assert.isTrue(null != p.getCountry() && !p.getCountry().isEmpty(), "国家地区不能为空");
+		Assert.isTrue(null != p.getBirthdate(), "出生日期不能为空");
+		Assert.isTrue(null != p.getBirthProvince() && !p.getBirthProvince().isEmpty(), "出生省份不能为空");
+		Assert.isTrue(null != p.getBirthPlaceType() && !p.getBirthPlaceType().isEmpty(), "出生地址类型不能为空");
+		Assert.isTrue(null != p.getBirthPlace() && !p.getBirthPlace().isEmpty(), "出生地点不能为空");
+		Assert.isTrue(null != p.getHukouPlace() && !p.getHukouPlace().isEmpty(), "户口所在地不能为空");
+		Assert.isTrue(null != p.getHukouType() && !p.getHukouType().isEmpty(), "户口类型不能为空");
+		Assert.isTrue(null != p.getReligion() && !p.getReligion().isEmpty(), "宗教信仰不能为空");
+		Assert.isTrue(null != p.getPolitics() && !p.getPolitics().isEmpty(), "政治面貌不能为空");
+		Assert.isTrue(null != p.getBlood() && !p.getBlood().isEmpty(), "血型不能为空");
+		Assert.isTrue(null != p.getHeight() && !p.getHeight().isEmpty(), "身高不能为空");
+		Assert.isTrue(null != p.getVisionLeft() && !p.getVisionLeft().isEmpty(), "视力（左）不能为空");
+		Assert.isTrue(null != p.getVisionRight() && !p.getVisionRight().isEmpty(), "视力（右）不能为空");
+		Assert.isTrue(null != p.getFirstworkdate(), "首次参加工作时间不能为空");
+		Assert.isTrue(null != p.getSpecialty() && !p.getSpecialty().isEmpty(), "特长不能为空");
+		Assert.isTrue(null != p.getPhone() && !p.getPhone().isEmpty(), "联系电话不能为空");
+		Assert.isTrue(null != p.getAddress3() && !p.getAddress3().isEmpty(), "邮件送达地址不能为空");
+		Assert.isTrue(null != p.getAddress2() && !p.getAddress2().isEmpty(), "家庭地址不能为空");
+		Assert.isTrue(null != p.getAddress1() && !p.getAddress1().isEmpty(), "现居住地址不能为空");
+
+		// 紧急联系人
+		Wrapper<RegPersonalExigence> wrapper3 = new CriterionWrapper<RegPersonalExigence>(RegPersonalExigence.class);
+		wrapper3.eq("is_delete", 0);
+		wrapper3.eq("personal_id", personalId);
+		wrapper3.and(" name is not null ");
+		wrapper3.and(" name !='' ");
+		wrapper3.and(" relation is not null ");
+		wrapper3.and(" relation  !='' ");
+		// 有且只有一个主要联系人-且必须是第一个
+		wrapper3.orderBy("is_main", false); // 降序-确保第一个是主要联系人
+		List<RegPersonalExigence> lExigence = regPersonalExigenceService.selectList(wrapper3);
+		if (null == lExigence || lExigence.isEmpty()) {
+			Assert.isTrue(false, "请添加紧急联系人");
+		}
+
+		for (RegPersonalExigence exi : lExigence) {
+			Assert.isTrue(null != exi.getName() && !exi.getName().isEmpty(), "紧急联系人的姓名不能为空");
+			Assert.isTrue(null != exi.getRelation() && !exi.getRelation().isEmpty(), "紧急联系人的关系不能为空");
+			Assert.isTrue(null != exi.getPhone() && !exi.getPhone().isEmpty(), "紧急联系人的联系电话不能为空");
+		}
+
+		if (peo.getPertype() != 4) {
+			// 不是岗位工时
+			Wrapper<RegPersonalEducation> wrapper6 = new CriterionWrapper<RegPersonalEducation>(
+					RegPersonalEducation.class);
+			wrapper6.eq("is_delete", 0);
+			wrapper6.eq("personal_id", p.getFdId());
+			wrapper6.eq("typename", "统招学历");
+			List<RegPersonalEducation> lEduCheck = regPersonalEducationService.selectList(wrapper6);
+
+			if (null == lEduCheck || lEduCheck.isEmpty()) {
+				Assert.isTrue(false, "请添加统招学历");
+			} else {
+				for (RegPersonalEducation eu : lEduCheck) {
+					Assert.isTrue(null != eu.getSchool() && !eu.getSchool().isEmpty(), "统招学历的学校名称不能为空");
+					Assert.isTrue(null != eu.getEnddate(), "统招学历的结束日期不能为空");
+				}
+			}
+		}
+
+		// 最高学历
+		Wrapper<RegPersonalEducation> wrapper5 = new CriterionWrapper<RegPersonalEducation>(RegPersonalEducation.class);
+		wrapper5.eq("is_delete", 0);
+		wrapper5.eq("personal_id", p.getFdId());
+		wrapper5.and(" school is not null ");
+		wrapper5.and(" school  !='' ");
+		wrapper5.and(" enddate is not null ");
+		List<RegPersonalEducation> lEducation = regPersonalEducationService.selectList(wrapper5);
+		for (RegPersonalEducation edu : lEducation) {
+			Assert.isTrue(null != edu.getTypename() && !edu.getTypename().isEmpty(), "最高学历的类型不能为空");
+			Assert.isTrue(null != edu.getSchool() && !edu.getSchool().isEmpty(), "最高学历的毕业院校不能为空");
+			Assert.isTrue(null != edu.getStartdate(), "最高学历的开始时间不能为空");
+			Assert.isTrue(null != edu.getEnddate(), "最高学历的毕业时间不能为空");
+			Assert.isTrue(null != edu.getMajor() && !edu.getMajor().isEmpty(), "最高学历的专业不能为空");
+			Assert.isTrue(null != edu.getEducation() && !edu.getEducation().isEmpty(), "最高学历的学历不能为空");
+			Assert.isTrue(null != edu.getDegree() && !edu.getDegree().isEmpty(), "最高学历的学位不能为空");
+			Assert.isTrue(null != edu.getRegime() && !edu.getRegime().isEmpty(), "最高学历的学制不能为空");
+		}
+
+		if (null == p.getHighestEduc() || p.getHighestEduc().isEmpty())
+			p.setHighestEduc("02");// 小学
+
+		// 家庭成员
+		Wrapper<RegPersonalFamily> wrapper2 = new CriterionWrapper<RegPersonalFamily>(RegPersonalFamily.class);
+		wrapper2.eq("is_delete", 0);
+		wrapper2.eq("personal_id", personalId);
+		wrapper2.and(" name is not null ");
+		wrapper2.and(" name  !='' ");
+		wrapper2.and(" relation is not null ");
+		wrapper2.and(" relation  !='' ");
+		List<RegPersonalFamily> lFamily = regPersonalFamilyService.selectList(wrapper2);
+		for (RegPersonalFamily fam : lFamily) {
+			Assert.isTrue(null != fam.getName() && !fam.getName().isEmpty(), "家庭成员的姓名不能为空");
+			Assert.isTrue(null != fam.getRelation() && !fam.getRelation().isEmpty(), "家庭成员的关系不能为空");
+			Assert.isTrue(null != fam.getPhone() && !fam.getPhone().isEmpty(), "家庭成员的联系电话不能为空");
+		}
+
+		// 工作经历
+		Wrapper<RegPersonalWork> wrapper1 = new CriterionWrapper<RegPersonalWork>(RegPersonalWork.class);
+		wrapper1.eq("is_delete", 0);
+		wrapper1.eq("personal_id", personalId);
+		wrapper1.and(" company is not null ");
+		wrapper1.and(" company  !='' ");
+		wrapper1.and(" enddate is not null ");
+		wrapper1.orderBy("startdate");
+		List<RegPersonalWork> lWork = regPersonalWorkService.selectList(wrapper1);
+
+		for (RegPersonalWork wor : lWork) {
+			Assert.isTrue(null != wor.getStartdate(), "工作经历的开始时间不能为空");
+			Assert.isTrue(null != wor.getCompany() && !wor.getCompany().isEmpty(), "工作经历的工作单位不能为空");
+		}
+
+		// 人员职位
+		RegJob job = regJobService.selectById(p.getFdId());
+		Assert.notNull(job, "没有找到人员职位信息");
+		Assert.isTrue(null != job.getPositionNbr() && !job.getPositionNbr().isEmpty(), "岗位不能为空");
+		Assert.isTrue(null != job.getUpperNbr() && !job.getUpperNbr().isEmpty(), "直接上级岗位不能为空");
+		Assert.isTrue(null != job.getJobLevel() && !job.getJobLevel().isEmpty(), "职务等级不能为空");
+		// 入职原因(101社会招聘;100:校园招聘)
+		if (p.getPertype() == 2 || p.getPertype() == 3)
+			job.setReason("100");
+		else
+			job.setReason("101");
+
+		// 行政技术等级
+		Wrapper<RegBaseData> wrapperBase = new CriterionWrapper<RegBaseData>(RegBaseData.class);
+		wrapperBase.eq("typecn", "行政-技术职务");
+		wrapperBase.eq("status", "A");
+		wrapperBase.eq("syncid", job.getJobLevel());
+		RegBaseData base1 = regBaseDataService.selectFirst(wrapperBase);
+		if (null != base1)
+			job.setTechJobcode(base1.getCode());
+		else {
+			if (p.getPertype() == 4)
+				job.setTechJobcode("063");// 岗位工
+			else
+				job.setTechJobcode("061");// 科员
+		}
+		regJobService.updateById(job);
+
+		String sresult = "";
+
+		// 人员信息
+		sresult = PsCiUtils.personalToPs(p);
+		if (sresult.equals("人员信息同步失败"))
+			return sresult;
+
+		// 人员岗位
+		sresult = PsCiUtils.regJobToPs(p, job);
+		if (sresult.equals("岗位信息同步失败"))
+			return sresult;
+
+		// 工作经历-全删全增
+		if (null != lWork && !lWork.isEmpty()) {
+			sresult = PsCiUtils.workToPs(p, lWork);
+		}
+
+		// 家庭成员-全删全增
+		if (null != lFamily && !lFamily.isEmpty()) {
+			sresult = PsCiUtils.familyToPs(p, lFamily);
+		}
+
+		// 紧急联系人-全删全增
+		if (null != lExigence && !lExigence.isEmpty()) {
+			sresult = PsCiUtils.exigenceToPs(p, lExigence);
+		}
+
+		// 招聘信息-只传第一条
+		Wrapper<RegPersonalEmployWay> wrapper4 = new CriterionWrapper<RegPersonalEmployWay>(RegPersonalEmployWay.class);
+		wrapper4.eq("is_delete", 0);
+		wrapper4.eq("personal_id", personalId);
+		wrapper4.eq("checked", 1);
+		wrapper4.orderBy("code");
+		RegPersonalEmployWay employWay = regPersonalEmployWayService.selectFirst(wrapper4);
+		if (employWay != null) {
+			sresult = PsCiUtils.employWayToPs(p, employWay);
+		}
+
+		// 最高学历-全删全增
+		if (null != lEducation && !lEducation.isEmpty()) {
+			sresult = PsCiUtils.educationToPs(p, lEducation);
+		}
+
+		peo.setIsTops(1);
+		peo.setTopsdate(new Date());
+		peo.setTopsuserid(UserUtils.getUserId());
+		regPeopleService.updateById(peo);
+
+		if (peo.getPertype() == 4) {
+			// 岗位工
+			Wrapper<RegWorkerInterview> wrapper8 = new CriterionWrapper<RegWorkerInterview>(RegWorkerInterview.class);
+			wrapper8.eq("is_delete", 0);
+			wrapper8.eq("personal_id", peo.getFdId());
+			RegWorkerInterview wor = regWorkerInterviewService.selectFirst(wrapper8);
+			if (null != wor) {
+				wor.setIsTops(1);
+				regWorkerInterviewService.updateById(wor);
+			}
+		}
+
+		return sresult;
+	}
+
+	
+	
+	
+}

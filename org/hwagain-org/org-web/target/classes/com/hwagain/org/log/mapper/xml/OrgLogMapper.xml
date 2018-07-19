@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.log.mapper.OrgLogMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.log.entity.OrgLog">
+		<id column="fd_id" property="fdId" />
+		<result column="type" property="type" />
+		<result column="operation_tbl" property="operationTbl" />
+		<result column="version" property="version" />
+		<result column="operation_url" property="operationUrl" />
+		<result column="operation_before_id" property="operationBeforeId" />
+		<result column="operation_after_id" property="operationAfterId" />
+		<result column="operation_before" property="operationBefore" />
+		<result column="operation_after" property="operationAfter" />
+		<result column="remark" property="remark" />
+		<result column="status" property="status" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+		<result column="company" property="company" />
+		<result column="org_code" property="orgCode" />
+		<result column="json" property="json" />
+		<result column="state" property="state" />
+	</resultMap>
+
+	<update id="updateLogStatus" parameterType="Object">
+		update org_log set status = '1' where version=#{version}
+	</update>
+</mapper>

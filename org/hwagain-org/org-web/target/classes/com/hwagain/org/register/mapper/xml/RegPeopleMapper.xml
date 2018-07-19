@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegPeopleMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegPeople">
+		<id column="fd_id" property="fdId" />
+		<result column="company_id" property="companyId" />
+		<result column="name" property="name" />
+		<result column="sex" property="sex" />
+		<result column="nation" property="nation" />
+		<result column="nid" property="nid" />
+		<result column="birthdate" property="birthdate" />
+		<result column="address" property="address" />
+		<result column="is_record" property="isRecord" />
+		<result column="is_position" property="isPosition" />
+		<result column="emplid" property="emplid" />
+		<result column="is_empcar" property="isEmpcar" />
+		<result column="empcarno" property="empcarno" />
+		<result column="is_tops" property="isTops" />
+		<result column="pertype" property="pertype" />
+		<result column="topsuserid" property="topsuserid" />
+		<result column="topsdate" property="topsdate" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+	</resultMap>
+	<select id="getAllNid" parameterType="Object" resultType="String">
+		select Nid From reg_people
+		Where pertype = 4 
+	</select>
+</mapper>

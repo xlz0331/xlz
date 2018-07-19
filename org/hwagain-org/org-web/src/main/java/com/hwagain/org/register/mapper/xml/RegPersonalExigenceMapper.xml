@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegPersonalExigenceMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegPersonalExigence">
+		<id column="fd_id" property="fdId" />
+		<result column="personal_id" property="personalId" />
+		<result column="name" property="name" />
+		<result column="relation" property="relation" />
+		<result column="phone" property="phone" />
+		<result column="phone2" property="phone2" />
+		<result column="address" property="address" />
+		<result column="is_main" property="isMain" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+	</resultMap>
+
+</mapper>

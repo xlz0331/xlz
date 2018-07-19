@@ -1,0 +1,255 @@
+package com.hwagain.org.register.service.impl;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import com.hwagain.org.register.entity.RegEmployCollege;
+import com.hwagain.org.register.entity.RegPeople;
+import com.hwagain.org.register.entity.RegWorkerInterview;
+import com.hwagain.org.register.dto.RegPeopleDto;
+import com.hwagain.org.register.mapper.RegPeopleMapper;
+import com.hwagain.org.register.service.IRegEmployCollegeService;
+import com.hwagain.org.register.service.IRegPeopleService;
+import com.hwagain.org.register.service.IRegWorkerInterviewService;
+import com.hwagain.framework.mybatisplus.service.impl.ServiceImpl;
+import com.hwagain.framework.mybatisplus.toolkit.IdWorker;
+import com.hwagain.framework.security.common.util.UserUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import com.hwagain.framework.mybatisplus.mapper.CriterionWrapper;
+import com.hwagain.framework.mybatisplus.mapper.Wrapper;
+import com.hwagain.framework.mybatisplus.plugins.Page;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+import com.hwagain.framework.core.util.ArraysUtil;
+
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
+
+/**
+ * <p>
+ * 入职注册-注册登记 服务实现类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+@Service("regPeopleService")
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+public class RegPeopleServiceImpl extends ServiceImpl<RegPeopleMapper, RegPeople> implements IRegPeopleService {
+
+	// entity转dto
+	static MapperFacade entityToDtoMapper;
+
+	// dto转entity
+	static MapperFacade dtoToEntityMapper;
+	@Autowired
+	RegPeopleMapper regPeopleMapper;
+	@Autowired
+	IRegEmployCollegeService regEmployCollegeService;
+	@Autowired
+	IRegWorkerInterviewService regWorkerInterviewService;
+
+	static {
+		MapperFactory factory = new DefaultMapperFactory.Builder().build();
+		factory.classMap(RegPeople.class, RegPeopleDto.class).byDefault().register();
+		entityToDtoMapper = factory.getMapperFacade();
+
+		MapperFactory factorytwo = new DefaultMapperFactory.Builder().build();
+		factorytwo.classMap(RegPeopleDto.class, RegPeople.class).byDefault().register();
+		dtoToEntityMapper = factorytwo.getMapperFacade();
+	}
+
+	@Override
+	public List<RegPeopleDto> findAll() {
+		Wrapper<RegPeople> wrapper = new CriterionWrapper<RegPeople>(RegPeople.class);
+		List<RegPeople> list = super.selectList(wrapper);
+		return entityToDtoMapper.mapAsList(list, RegPeopleDto.class);
+	}
+
+	@Override
+	public RegPeopleDto findOne(String fdId) {
+		return entityToDtoMapper.map(super.selectById(fdId), RegPeopleDto.class);
+	}
+	
+	@Override
+	public RegPeopleDto findTwo(String nid){
+		return entityToDtoMapper.map(super.selectById(nid), RegPeopleDto.class);
+	}
+
+	@Override
+	public RegPeopleDto save(RegPeopleDto dto) {
+
+		dto.setDocCreateId(UserUtils.getUserId());
+		dto.setDocCreateTime(new Date());
+
+		RegPeople entity = dtoToEntityMapper.map(dto, RegPeople.class);
+		super.insert(entity);
+		return dto;
+	}
+
+	@Override
+	public RegPeopleDto update(RegPeopleDto dto) {
+
+		dto.setDocLastUpdateId(UserUtils.getUserId());
+		dto.setDocLastUpdateTime(new Date());
+
+		RegPeople entity = dtoToEntityMapper.map(dto, RegPeople.class);
+		super.updateById(entity);
+		return dto;
+	}
+
+	@Override
+	public Boolean deleteByIds(String ids) {
+		String[] id = ids.split(";");
+		for (String sid : id) {
+			RegPeople entity = super.selectById(sid);
+			entity.setIsDelete(1);
+			super.updateById(entity);
+		}
+		return true;
+		// return super.deleteBatchIds(Arrays.asList(id));
+	}
+
+	@Override
+	public PageDto<RegPeopleDto> findByPage(RegPeopleDto dto, PageVO pageVo) {
+		if (null != dto.getPageVo())
+			pageVo = dto.getPageVo();
+
+		PageDto<RegPeopleDto> pageDto = new PageDto<RegPeopleDto>();
+		pageDto.setPage(pageVo.getPage() + 1);
+		pageDto.setPageSize(pageVo.getPageSize());
+		Wrapper<RegPeople> wrapper = new CriterionWrapper<RegPeople>(RegPeople.class);
+
+		wrapper.eq("is_delete", 0);
+		if (null != dto.getCompanyId() && !dto.getCompanyId().isEmpty())
+			wrapper.eq("company_id", dto.getCompanyId());
+		if (null != dto.getPertype())
+			wrapper.eq("pertype", dto.getPertype());
+		if (null != dto.getIsTops())
+			wrapper.eq("is_tops", dto.getIsTops());
+
+		if (null == pageDto.getOrderBy())
+			wrapper.orderBy("doc_create_time", false);
+
+		Page<RegPeople> page = super.selectPage(new Page<RegPeople>(pageDto.getPage(), pageDto.getPageSize()), wrapper);
+		if (ArraysUtil.notEmpty(page.getRecords())) {
+			pageDto.setList(entityToDtoMapper.mapAsList(page.getRecords(), RegPeopleDto.class));
+		}
+		pageDto.setRowCount(page.getTotal());
+		return pageDto;
+	}
+
+	// 刷身份证
+	@Override
+	public RegPeopleDto shuKa(RegPeopleDto dto) {
+		Assert.isTrue(null != dto.getCompanyId() && !dto.getCompanyId().isEmpty(), "公司Id不能为空");
+		Assert.isTrue(null != dto.getPertype(), "人员类型不能为空");
+		Assert.isTrue(null != dto.getName() && !dto.getName().isEmpty(), "姓名不能为空");
+		Assert.isTrue(null != dto.getSex() && !dto.getSex().isEmpty(), "性别不能为空");
+		Assert.isTrue(null != dto.getNid() && !dto.getNid().isEmpty(), "身份证号码不能为空");
+		Assert.isTrue(null != dto.getNation() && !dto.getNation().isEmpty(), "民族不能为空");
+		Assert.isTrue(null != dto.getBirthdate(), "出生日期不能为空");
+		Assert.isTrue(null != dto.getAddress() && !dto.getAddress().isEmpty(), "住址不能为空");
+
+		Wrapper<RegPeople> wrapper = new CriterionWrapper<RegPeople>(RegPeople.class);
+		wrapper.eq("is_delete", 0);
+		wrapper.eq("nid", dto.getNid());
+		wrapper.eq("is_tops", 0);
+		List<RegPeople> list = super.selectList(wrapper);
+		//System.out.print("****************");
+		int[] w = {7,9,10,5,8,4,2,1,6,
+	            3,7,9,10,5,8,4,2};
+		String s=dto.getNid();
+	 	char[] c=s.toCharArray();
+        int sum=0;
+        for (int i = 0; i < w.length; i++) {
+            sum+=(c[i]-'0')*w[i];
+        }
+        //System.out.println(sum);
+        char[] verifyCode="10X98765432".toCharArray();
+        char ch =verifyCode[sum%11];
+       // System.out.println(ch);
+        if(c[17]!=ch){
+        	Assert.isTrue(false,"身份证号有误,若前17位无误，末位应为"+ch);
+        }
+		if (null != list && !list.isEmpty()) {
+			Assert.isTrue(false, "身份证号码为" + dto.getNid() + "的记录已经存在，且未传PS");
+		}
+
+		String sex = dto.getSex();
+		if (null != sex && !sex.isEmpty()) {
+			if (sex.equals("男"))
+				sex = "M";
+			if (sex.equals("女"))
+				sex = "F";
+		}
+
+		RegPeople peo = new RegPeople();
+		peo.setFdId(String.valueOf(IdWorker.getId()));
+		peo.setNid(String.valueOf(IdWorker.getId()));
+		peo.setCompanyId(dto.getCompanyId());
+		peo.setName(dto.getName());
+		peo.setSex(sex);
+		peo.setNation(dto.getNation());
+		//peo.setNid(dto.getNid());
+		peo.setBirthdate(dto.getBirthdate());
+		peo.setAddress(dto.getAddress());
+		peo.setPertype(dto.getPertype());
+
+		peo.setDocCreateId(UserUtils.getUserId());
+		peo.setDocCreateTime(new Date());
+		super.insert(peo);
+
+		if (dto.getPertype() == 2 || dto.getPertype() == 3) {
+			Wrapper<RegEmployCollege> wrapper3 = new CriterionWrapper<RegEmployCollege>(RegEmployCollege.class);
+			wrapper3.eq("is_delete", 0);
+			wrapper3.eq("nid", dto.getNid());
+			List<RegEmployCollege> listColl = regEmployCollegeService.selectList(wrapper3);
+			if (null != listColl && !listColl.isEmpty()) {
+				for (RegEmployCollege co : listColl) {
+					if (null == co.getIsRegister() || co.getIsRegister() == 0) {
+						co.setIsRegister(1);
+						regEmployCollegeService.updateById(co);
+					}
+				}
+			}
+		}
+		else if (dto.getPertype() == 4)
+		{
+			//岗位工
+			Wrapper<RegWorkerInterview> wrapper4 = new CriterionWrapper<RegWorkerInterview>(RegWorkerInterview.class);
+			wrapper4.eq("is_delete", 0);			
+			wrapper4.eq("nid", dto.getNid());
+			wrapper4.and(" personal_id is null ");
+			wrapper4.eq("is_tops", 0);
+			wrapper4.orderBy("doc_create_time",false);
+			RegWorkerInterview wor = regWorkerInterviewService.selectFirst(wrapper4);
+			if(null!=wor)
+			{
+				wor.setPersonalId(peo.getNid());
+				regWorkerInterviewService.updateById(wor);
+			}
+		}
+
+		return findTwo(peo.getNid());
+
+	}
+
+	@Override
+	public List<String> getAllNids() throws CustomException {
+		List<String> list = regPeopleMapper.getAllNid();
+		return list;
+	}
+
+}

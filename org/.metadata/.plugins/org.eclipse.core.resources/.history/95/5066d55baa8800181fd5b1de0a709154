@@ -1,0 +1,48 @@
+package com.hwagain.org.register.service.impl;
+
+import com.hwagain.org.register.entity.RegPersonal;
+import com.hwagain.org.register.dto.RegPersonalDto;
+import com.hwagain.framework.mybatisplus.service.IService;
+import java.util.List;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+public interface IRegPersonalService extends IService<RegPersonal> {
+	
+	public List<RegPersonalDto> findAll() throws CustomException; 
+	
+	public RegPersonalDto findOne(String fdId) throws CustomException;
+	
+	public RegPersonalDto save(RegPersonalDto dto) throws CustomException;
+	
+	public String update(RegPersonalDto dto) throws CustomException;
+	
+	public String update2(RegPersonalDto dto);
+	
+	public Boolean deleteByIds(String ids) throws CustomException;
+	
+	public PageDto<RegPersonalDto> findByPage(RegPersonalDto dto,PageVO pageVo) throws CustomException;
+
+	public RegPersonalDto getAndInit(String personalId);
+
+	public String psSentPersonalData(String personalId);
+
+	public RegPersonal psGetEmplidByNid(String personalId);
+
+	public String testPsCreateEmp(String personalId);
+
+	public String testSentEmpToKqxt(String personalId);
+
+	public String updateCheck(RegPersonalDto dto);
+
+	
+}

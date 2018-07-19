@@ -1,0 +1,260 @@
+package com.hwagain.org.register.service.impl;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import com.hwagain.org.register.entity.RegWorkerInterview;
+import com.hwagain.org.register.entity.RegWorkerInterviewPicture;
+import com.hwagain.org.register.dto.RegEmployTableDto;
+import com.hwagain.org.register.dto.RegWorkerInterviewDto;
+import com.hwagain.org.register.dto.RegWorkerInterviewPictureDto;
+import com.hwagain.org.register.mapper.RegWorkerInterviewMapper;
+import com.hwagain.org.register.service.IRegWorkerInterviewPictureService;
+import com.hwagain.org.register.service.IRegWorkerInterviewService;
+import com.hwagain.org.register.util.SqlDbUtils;
+import com.hwagain.org.util.JDBCConfig;
+import com.hwagain.framework.mybatisplus.service.impl.ServiceImpl;
+import com.hwagain.framework.mybatisplus.toolkit.IdWorker;
+import com.hwagain.framework.security.common.util.UserUtils;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.hwagain.framework.mybatisplus.mapper.CriterionWrapper;
+import com.hwagain.framework.mybatisplus.mapper.Wrapper;
+import com.hwagain.framework.mybatisplus.plugins.Page;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+import com.hwagain.framework.core.util.ArraysUtil;
+import com.hwagain.framework.core.util.Assert;
+
+import ma.glasnost.orika.MapperFacade;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+/**
+ * <p>
+ * 入职注册-岗位工面试体检 服务实现类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+@Service("regWorkerInterviewService")
+@Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+public class RegWorkerInterviewServiceImpl extends ServiceImpl<RegWorkerInterviewMapper, RegWorkerInterview>
+		implements IRegWorkerInterviewService {
+
+	// entity转dto
+	static MapperFacade entityToDtoMapper;
+
+	// dto转entity
+	static MapperFacade dtoToEntityMapper;
+
+	@Autowired
+	RegWorkerInterviewMapper regWorkerInterviewMapper;
+	@Autowired
+	RegPeopleServiceImpl regPeopleServiceImpl;
+	@Autowired
+	JDBCConfig jDBCConfig;
+	@Autowired
+	IRegWorkerInterviewPictureService regWorkerInterviewPictureService;
+
+	static {
+		MapperFactory factory = new DefaultMapperFactory.Builder().build();
+		factory.classMap(RegWorkerInterview.class, RegWorkerInterviewDto.class).byDefault().register();
+		entityToDtoMapper = factory.getMapperFacade();
+
+		MapperFactory factorytwo = new DefaultMapperFactory.Builder().build();
+		factorytwo.classMap(RegWorkerInterviewDto.class, RegWorkerInterview.class).byDefault().register();
+		dtoToEntityMapper = factorytwo.getMapperFacade();
+	}
+
+	@Override
+	public List<RegWorkerInterviewDto> findAll() {
+		Wrapper<RegWorkerInterview> wrapper = new CriterionWrapper<RegWorkerInterview>(RegWorkerInterview.class);
+		List<RegWorkerInterview> list = super.selectList(wrapper);
+		return entityToDtoMapper.mapAsList(list, RegWorkerInterviewDto.class);
+	}
+
+	@Override
+	public RegWorkerInterviewDto findOne(String fdId) {
+		return entityToDtoMapper.map(super.selectById(fdId), RegWorkerInterviewDto.class);
+	}
+
+	@Override
+	public RegWorkerInterviewDto save(RegWorkerInterviewDto dto) {
+		Assert.notBlank(dto.getName(), "姓名为空");
+		dto.setDocCreateId(UserUtils.getUserId());
+		dto.setDocCreateTime(new Date());
+		dto.setFdId(IdWorker.getId() + "");
+		// 查重
+		List<RegWorkerInterview> exitInterviewer = regWorkerInterviewMapper.checkExist(null, dto.getNid(),
+				dto.getPicNo());
+		Assert.isTrue(exitInterviewer.size() == 0, "身份证号或照片编号重复");
+		RegWorkerInterview entity = dtoToEntityMapper.map(dto, RegWorkerInterview.class);
+		super.insert(entity);
+		return dto;
+	}
+
+	@Override
+	public RegWorkerInterviewDto update(RegWorkerInterviewDto dto) {
+		Assert.notBlank(dto.getFdId(), "fdId为空");
+		Assert.notBlank(dto.getName(), "姓名为空");
+		dto.setDocLastUpdateId(UserUtils.getUserId());
+		dto.setDocLastUpdateTime(new Date());
+		// 查重
+		List<RegWorkerInterview> exitInterviewer = regWorkerInterviewMapper.checkExist(dto.getFdId(), dto.getNid(),
+				dto.getPicNo());
+		Assert.isTrue(exitInterviewer.size() == 0, "身份证号或照片编号重复");
+
+		RegWorkerInterview entity = dtoToEntityMapper.map(dto, RegWorkerInterview.class);
+		super.updateById(entity);
+		return dto;
+	}
+
+
+	@Override
+	public Boolean deleteByIds(String ids) {
+		String[] id = ids.split(";");
+		for (String sid : id) {
+			RegWorkerInterview entity = super.selectById(sid);
+			entity.setIsDelete(1);
+			super.updateById(entity);
+		}
+		return true;
+		// return super.deleteBatchIds(Arrays.asList(id));
+	}
+
+	@Override
+	public PageDto<RegWorkerInterviewDto> findByPage(RegWorkerInterviewDto dto, PageVO pageVo) {
+		if (null != dto.getPageVo())
+			pageVo = dto.getPageVo();
+
+		PageDto<RegWorkerInterviewDto> pageDto = new PageDto<RegWorkerInterviewDto>();
+		pageDto.setPage(pageVo.getPage() + 1);
+		pageDto.setPageSize(pageVo.getPageSize());
+		Wrapper<RegWorkerInterview> wrapper = new CriterionWrapper<RegWorkerInterview>(RegWorkerInterview.class);
+
+		wrapper.eq("is_delete", 0);
+
+		Page<RegWorkerInterview> page = super.selectPage(
+				new Page<RegWorkerInterview>(pageDto.getPage(), pageDto.getPageSize()), wrapper);
+		if (ArraysUtil.notEmpty(page.getRecords())) {
+			pageDto.setList(entityToDtoMapper.mapAsList(page.getRecords(), RegWorkerInterviewDto.class));
+		}
+		pageDto.setRowCount(page.getTotal());
+		return pageDto;
+	}
+
+	/**
+	 * 按公司和分页列出未核对通过列表
+	 */
+	@Override
+	public PageDto<RegWorkerInterviewDto> findByCompanyPage(String company, PageVO pageVo) throws CustomException {
+		PageDto<RegWorkerInterviewDto> pageDto = new PageDto<RegWorkerInterviewDto>();
+		pageDto.setPage(pageVo.getPage());
+		pageDto.setPageSize(pageVo.getPageSize());
+
+		Wrapper<RegWorkerInterview> wrapper = new CriterionWrapper<RegWorkerInterview>(RegWorkerInterview.class);
+		wrapper.eq("is_delete", 0);
+		wrapper.eq("company_id", company);
+		// 需要选择提交OA
+		// wrapper.where("nid NOT IN (SELECT nid FROM reg_people)");
+		Page<RegWorkerInterview> page = super.selectPage(
+				new Page<RegWorkerInterview>(pageDto.getPage(), pageDto.getPageSize()), wrapper);
+		if (ArraysUtil.notEmpty(page.getRecords())) {
+			pageDto.setList(entityToDtoMapper.mapAsList(page.getRecords(), RegWorkerInterviewDto.class));
+			List<RegWorkerInterviewDto> listIntervs = pageDto.getList();
+			SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日");
+			for (RegWorkerInterviewDto r : listIntervs) {
+				r.setDodateStr(format.format(r.getDodate()));
+			}
+		}
+		pageDto.setRowCount(page.getTotal());
+		return pageDto;
+	}
+
+	/**
+	 * 批量修改体检记录
+	 */
+	@Override
+	public Boolean updateBatch(List<RegWorkerInterviewDto> dtos) throws CustomException {
+		Assert.notEmpty(dtos, "空列表");
+		String updater = UserUtils.getUserId();
+		Date updateTime = new Date();
+
+		List<RegWorkerInterview> entites = dtoToEntityMapper.mapAsList(dtos, RegWorkerInterview.class);
+		for (RegWorkerInterview interviewer : entites) {
+			interviewer.setDocLastUpdateId(updater);
+			interviewer.setDocLastUpdateTime(updateTime);
+		}
+		return super.updateBatchById(entites);
+	}
+
+	/**
+	 * 生成录用人员明细表
+	 */
+	@Override
+	public String createEmployPeopleTable(String ids) {
+		Assert.isTrue(null != ids && !ids.isEmpty(), "id不能为空");
+
+		String[] id = ids.split(";");
+		String sOaBatch = String.valueOf(IdWorker.getId());
+		RegWorkerInterview entity = null;
+		for (String sid : id) {
+			entity = super.selectById(sid);
+			entity.setOaBatch(sOaBatch);
+			super.updateById(entity);
+		}
+
+		if (null != entity) {
+			// 推送到OA中间表
+			String stemid = "04f7481ea786416ba07ab227e716a5aa";
+			String sTitle = "录用人员明细表";
+			String sMemo = entity.getCompanyId() + ";" + sOaBatch;
+
+			Integer iresult = SqlDbUtils.sentOaFlow(stemid, sOaBatch, sTitle,
+					UserUtils.getUserInfo().getFdEmployeeNumber(), UserUtils.getUserInfo().getName(), sMemo);
+			Assert.isTrue(iresult == 1, "生成录用人员明细表失败");
+		}
+		return "生成录用人员明细表成功";
+	}
+
+	// 查询录用人员明细表
+	@Override
+	public List<RegEmployTableDto> queryEmployPeopleTable(String oabatch) {
+
+		Assert.isTrue(null != oabatch && !oabatch.isEmpty(), "OA批次不能为空");
+		return regWorkerInterviewMapper.queryRegEmployTableData(oabatch);
+
+	}
+
+	// 查询岗位工照片
+	@Override
+	public List<RegWorkerInterviewPictureDto> queryWorkerPicByNid(String nid) {
+
+		Assert.isTrue(null != nid && !nid.isEmpty(), "身份证号码不能为空");
+
+		Wrapper<RegWorkerInterviewPicture> wrapper = new CriterionWrapper<RegWorkerInterviewPicture>(
+				RegWorkerInterviewPicture.class);
+		wrapper.eq("is_delete", 0);
+		wrapper.eq("nid", nid);
+		wrapper.orderBy("pic_id", false);
+
+		List<RegWorkerInterviewPicture> list = regWorkerInterviewPictureService.selectList(wrapper);
+
+		return entityToDtoMapper.mapAsList(list, RegWorkerInterviewPictureDto.class);
+
+	}
+}

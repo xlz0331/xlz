@@ -1,0 +1,5 @@
+package com.hwagain.org.register.service;
+
+public interface IRegPersonalSaveServiceImpl {
+
+}

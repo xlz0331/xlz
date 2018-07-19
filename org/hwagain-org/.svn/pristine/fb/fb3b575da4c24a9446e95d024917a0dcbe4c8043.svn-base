@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegPersonalWorkMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegPersonalWork">
+		<id column="fd_id" property="fdId" />
+		<result column="personal_id" property="personalId" />
+		<result column="startdate" property="startdate" />
+		<result column="enddate" property="enddate" />
+		<result column="company" property="company" />
+		<result column="phone" property="phone" />
+		<result column="position" property="position" />
+		<result column="city" property="city" />
+		<result column="salary" property="salary" />
+		<result column="prove_name" property="proveName" />
+		<result column="prove_dept" property="proveDept" />
+		<result column="prove_posi" property="provePosi" />
+		<result column="prove_phone" property="provePhone" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+	</resultMap>
+
+</mapper>

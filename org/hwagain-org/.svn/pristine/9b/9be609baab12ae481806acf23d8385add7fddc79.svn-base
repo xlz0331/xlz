@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.dept.mapper.OrgDeptMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.dept.entity.OrgDept">
+		<id column="fd_id" property="fdId" />
+		<result column="EFFDT" property="effdt" />
+		<result column="DEPTID" property="deptid" />
+		<result column="DESCR" property="descr" />
+		<result column="DESCRSHORT" property="descrshort" />
+		<result column="COMPANY" property="company" />
+		<result column="max_people" property="maxPeople" />
+		<result column="hierarchy_id" property="hierarchyId" />
+		<result column="parent_id" property="parentId" />
+		<result column="parent_DEPTID" property="parentDEPTID" />
+		<result column="version" property="version" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+		<result column="type_code" property="typeCode" />
+		<result column="order_value" property="orderValue" />
+		<result column="job_id" property="jobId" />
+	</resultMap>
+	
+	<select id="findDeptByParam" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgExcel">
+		select fd_id id,DESCRSHORT label,parent_id parentId,job_id job,
+		job_id jobId,type_code typeCode,DEPTID code
+		from org_dept where company = #{company} and type_code in
+		<foreach collection="typeCode" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<insert id="insertOrgDeptBatch" parameterType="Object">
+		insert into org_dept(
+			fd_id,
+			DEPTID,
+			DESCR,
+			DESCRSHORT,
+			COMPANY,
+			hierarchy_id,
+			parent_id,
+			parent_DEPTID,
+			version,
+			doc_create_time,
+			doc_creator_id,
+			type_code,
+			order_value,
+			job_id
+		) values 
+		<foreach collection="list" index="index" item="item" separator=",">
+			(
+				#{item.fdId},
+				#{item.deptid},
+				#{item.descr},
+				#{item.descrshort},
+				#{item.company},
+				#{item.hierarchyId},
+				#{item.parentId},
+				#{item.parentDEPTID},
+				#{item.version},
+				#{item.docCreateTime},
+				#{item.docCreatorId},
+				#{item.typeCode},
+				#{item.orderValue},
+				#{item.jobId}
+			)
+		</foreach>
+	</insert>
+	<update id="updateParentId" parameterType="Object">
+		update org_dept set parent_id=#{parentId},parent_DEPTID=#{parentDEPTID} 
+		where parent_id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="deleteBatchByIds" parameterType="Object">
+		update org_dept set is_delete = true where fd_id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="updateBatchByIds" parameterType="Object">
+		update org_dept set parent_id = #{fdId} where fd_id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="updateJobIdByIds" parameterType="Object">
+		update org_dept set job_id = #{jobId} where DEPTID in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="updateDeptVersion" parameterType="Object">
+		update org_dept set version=#{version},EFFDT=#{date} where company = #{company}
+	</update>
+	<update id="updateJobVersion"  parameterType="Object">
+		update org_job set dept_version=#{version} where company = #{company}
+	</update>
+	<update id="updateCompanyVersion"  parameterType="Object">
+		update org_company set version=#{version} where company = #{company}
+	</update>
+	
+	<select id="findNodeNameByCode" parameterType="Object" resultType="String">
+		select GROUP_CONCAT(DESCRSHORT SEPARATOR ';') from org_dept where is_delete = false and deptid in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+</mapper>

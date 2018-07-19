@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.job.mapper.OrgJobDesignMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.job.entity.OrgJobDesign">
+		<result column="fd_id" property="fdId" />
+		<result column="company" property="company" />
+		<result column="version" property="version" />
+		<result column="job_name" property="jobName" />
+		<result column="type_code" property="typeCode" />
+		<result column="max_compile_before" property="maxCompileBefore" />
+		<result column="max_people_before" property="maxPeopleBefore" />
+		<result column="max_compile_new" property="maxCompileNew" />
+		<result column="max_people_new" property="maxPeopleNew" />
+		<result column="status" property="status" />
+	</resultMap>
+	
+	<!-- 按公司及编码类型查询体系、部门、工厂等多个等级的deptID及简称-->
+	<select id="getDeptIdByParam" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgDeptDto">
+		SELECT dept.DEPTID deptid,dept.DESCRSHORT descrshort
+			FROM org_dept_pro dept
+			WHERE dept.company = #{company} 
+			<choose>
+        		<when test="deptId !=null and deptId != ''"> 
+           			AND dept.DEPTID = #{deptId}
+        		</when>
+        		<otherwise>
+            		AND dept.type_code = #{typeCode}
+        		</otherwise>
+    		</choose>		  
+			ORDER BY dept.DEPTID
+	</select>
+	
+	<!-- 按公司及编码类型查询体系、部门、工厂等多个等级及其下属所有职位 -->
+	<select id="getDetails" parameterType="Object" resultType="com.hwagain.org.job.dto.OrgJobDesignDetailDto">
+		SELECT
+			dept.DEPTID deptId,
+			dept.DESCRSHORT nodeName,
+			dept.DESCR longNodeName,
+			dept.parent_DEPTID deptParentId,
+			job.job_code jobCode,
+			job.job_name jobName,
+			job.max_compile jobCompile,
+			job.max_people jobPeople
+		FROM
+			org_dept_pro dept
+			LEFT JOIN org_job_pro job ON job.dept_code = dept.DEPTID 
+			AND job.is_delete = FALSE
+		WHERE
+			1 = 1 
+			 
+			<choose>
+        		<when test="deptId !=null and deptId != ''"> 
+           			AND dept.parent_DEPTID =#{deptId}
+           			OR dept.DEPTID =#{deptId}
+        		</when>
+        		<otherwise>
+            		AND dept.parent_DEPTID IN (SELECT dept.DEPTID FROM org_dept_pro dept WHERE dept.type_code = #{typeCode} AND dept.company = #{company} )
+            		OR dept.DEPTID IN (SELECT dept.DEPTID FROM org_dept_pro dept  WHERE dept.type_code = #{typeCode} AND dept.company = #{company})
+        		</otherwise>
+    		</choose>		
+		ORDER BY
+			dept.DEPTID asc
+	</select>
+</mapper>

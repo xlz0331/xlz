@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegWorkerInterviewMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap"
+		type="com.hwagain.org.register.entity.RegWorkerInterview">
+		<id column="fd_id" property="fdId" />
+		<result column="company_id" property="companyId" />
+		<result column="pic_no" property="picNo" />
+		<result column="name" property="name" />
+		<result column="sex" property="sex" />
+		<result column="nid" property="nid" />
+		<result column="phone" property="phone" />
+		<result column="douser" property="douser" />
+		<result column="dodate" property="dodate" />
+		<result column="doresult" property="doresult" />
+		<result column="personal_id" property="personalId" />
+		<result column="is_tops" property="isTops" />
+		<result column="oa_batch" property="oaBatch" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="is_pass" property="isPass" />
+	</resultMap>
+	<select id="checkExist" parameterType="Object"
+		resultType="com.hwagain.org.register.dto.RegWorkerInterviewDto">
+		SELECT
+		fd_id,
+		company_id,
+		pic_no,
+		`name`,
+		sex,
+		nid,
+		phone,
+		douser,
+		doresult,
+		is_delete,
+		doc_create_id,
+		doc_create_time,
+		doc_last_update_id,
+		doc_last_update_time,
+		dodate
+		FROM `reg_worker_interview` wi
+		<where>
+			<if test="fdId !='' and fdId != null">
+				fd_id &lt;&gt; #{fdId} AND
+			</if>
+			(pic_no = #{picNo} OR nid = #{nid})
+		</where>
+	</select>
+
+
+	<resultMap id="RptRegEmployTableDtoMap"
+		type="com.hwagain.org.register.dto.RegEmployTableDto">
+		<id column="fd_id" property="fdId" />
+		<result column="company_id" property="companyId" />
+		<result column="position_nbr" property="positionNbr" />
+		<result column="position" property="position" />
+		<result column="system_id" property="systemId" />
+		<result column="system" property="system" />
+		<result column="upper_nbr" property="upperNbr" />
+		<result column="upper_posi" property="upperPosi" />
+		<result column="upper_name" property="upperName" />
+		<result column="upper_no" property="upperNo" />
+		<result column="dept_id" property="deptId" />
+		<result column="dept" property="dept" />
+		<result column="workshop_id" property="workshopId" />
+		<result column="workshop" property="workshop" />
+		<result column="classes_id" property="classesId" />
+		<result column="classes" property="classes" />
+		<result column="section_id" property="sectionId" />
+		<result column="section" property="section" />
+		<result column="job_id" property="jobId" />
+		<result column="job_name" property="jobName" />
+		<result column="job_level" property="jobLevel" />
+		<result column="tryrange" property="tryrange" />
+		<result column="emptype" property="emptype" />
+		<result column="empattribute" property="empattribute" />
+		<result column="scope" property="scope" />
+		<result column="institution_id" property="institutionId" />
+		<result column="institution" property="institution" />
+		<result column="shiftcode" property="shiftcode" />
+		<result column="shiftname" property="shiftname" />
+		<result column="pertype" property="pertype" />
+		<result column="operate" property="operate" />
+		<result column="reason" property="reason" />
+		<result column="is_gps" property="isGps" />
+		<result column="tech_jobcode" property="techJobcode" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+
+		<result column="emplid" property="emplid" />
+		<result column="name" property="name" />
+		<result column="sex" property="sex" />
+		<result column="nation" property="nation" />
+		<result column="nid" property="nid" />
+		<result column="douser" property="douser" />
+
+	</resultMap>
+
+	<select id="queryRegEmployTableData" parameterType="String"
+		resultMap="RptRegEmployTableDtoMap">
+		select  j.* ,p.emplid,p.nation,p.nid,p.`name`,p.sex ,i.douser ,
+        	DATE_FORMAT(FROM_DAYS(TO_DAYS(NOW())-TO_DAYS(p.birthdate)), '%Y')+0 AS age
+		from reg_job j,reg_personal p ,reg_worker_interview i
+		<where>
+			i.personal_id = p.fd_id and p.fd_id = j.fd_id 
+			and p.is_delete=0 and j.is_delete=0 and i.is_delete=0 
+			and i.oa_batch=  #{oabatch}
+		</where>
+		order by p.emplid
+
+	</select>
+
+
+</mapper>

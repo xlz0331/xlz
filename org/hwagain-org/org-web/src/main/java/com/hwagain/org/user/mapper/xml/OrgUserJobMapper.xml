@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.user.mapper.OrgUserJobMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.user.entity.OrgUserJob">
+		<id column="fd_id" property="fdId" />
+		<result column="emp_code" property="empCode" />
+		<result column="job_code" property="jobCode" />
+		<result column="is_parttime" property="isParttime" />
+		<result column="class_id" property="classId" />
+	</resultMap>
+	
+	
+	<select id="findByJobCode" parameterType="Object" resultType="com.hwagain.org.user.dto.OrgUserJobDto">
+		select 
+			EMPLID empCode,
+			u.name empName,
+			j.job_code jobCode,
+			is_parttime isParttime,
+			class_id classId,
+			j.job_name jobName 
+			FROM `org_user_job` uj
+			LEFT JOIN org_user u ON uj.emp_code = u.EMPLID
+			LEFT JOIN org_job_pro j ON j.job_code = uj.job_code
+			<where>
+				uj.job_code = #{jobCode}
+			</where>
+	</select>
+</mapper>

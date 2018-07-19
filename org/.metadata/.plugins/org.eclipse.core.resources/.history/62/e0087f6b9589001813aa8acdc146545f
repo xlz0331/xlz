@@ -1,0 +1,34 @@
+package com.hwagain.org.register.service;
+
+import com.hwagain.org.register.entity.RegBaseData;
+import com.hwagain.org.register.dto.RegBaseDataDto;
+import com.hwagain.framework.mybatisplus.service.IService;
+import java.util.List;
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author guoym
+ * @since 2018-06-07
+ */
+public interface IRegBaseDataService extends IService<RegBaseData> {
+	
+	public List<RegBaseDataDto> findAll() throws CustomException; 
+	
+	public RegBaseDataDto findOne(String fdId) throws CustomException;
+	
+	public RegBaseDataDto save(RegBaseDataDto dto) throws CustomException;
+	
+	public RegBaseDataDto update(RegBaseDataDto dto) throws CustomException;
+	
+	public Boolean deleteByIds(String ids) throws CustomException;
+	
+	public PageDto<RegBaseDataDto> findByPage(RegBaseDataDto dto,PageVO pageVo) throws CustomException;
+
+	public List<RegBaseDataDto> findByTypeCn(String typeCn);
+}

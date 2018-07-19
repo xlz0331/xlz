@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.register.mapper.RegPersonalMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.register.entity.RegPersonal">
+		<id column="fd_id" property="fdId" />
+		<result column="company_id" property="companyId" />
+		<result column="emplid" property="emplid" />
+		<result column="name" property="name" />
+		<result column="sex" property="sex" />
+		<result column="nation" property="nation" />
+		<result column="nid" property="nid" />
+		<result column="address" property="address" />
+		<result column="marry" property="marry" />
+		<result column="only_child" property="onlyChild" />
+		<result column="native_place" property="nativePlace" />
+		<result column="country" property="country" />
+		<result column="birthdate" property="birthdate" />
+		<result column="birth_province" property="birthProvince" />
+		<result column="birth_place_type" property="birthPlaceType" />
+		<result column="birth_place" property="birthPlace" />
+		<result column="hukou_place" property="hukouPlace" />
+		<result column="hukou_type" property="hukouType" />
+		<result column="religion" property="religion" />
+		<result column="politics" property="politics" />
+		<result column="inpartydate" property="inpartydate" />
+		<result column="pic_name" property="picName" />
+		<result column="pic_id" property="picId" />
+		<result column="pic_path" property="picPath" />
+		<result column="blood" property="blood" />
+		<result column="height" property="height" />
+		<result column="vision_left" property="visionLeft" />
+		<result column="vision_right" property="visionRight" />
+		<result column="firstworkdate" property="firstworkdate" />
+		<result column="specialty" property="specialty" />
+		<result column="phone" property="phone" />
+		<result column="phone_home" property="phoneHome" />
+		<result column="emial" property="emial" />
+		<result column="qq" property="qq" />
+		<result column="address1" property="address1" />
+		<result column="address2" property="address2" />
+		<result column="address3" property="address3" />
+		<result column="highest_educ" property="highestEduc" />
+		<result column="pertype" property="pertype" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_create_id" property="docCreateId" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+	</resultMap>
+
+</mapper>

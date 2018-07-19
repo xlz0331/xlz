@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.dept.mapper.OrgDeptProMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.dept.entity.OrgDeptPro">
+		<id column="fd_id" property="fdId" />
+		<result column="EFFDT" property="effdt" />
+		<result column="DEPTID" property="deptid" />
+		<result column="DESCR" property="descr" />
+		<result column="DESCRSHORT" property="descrshort" />
+		<result column="COMPANY" property="company" />
+		<result column="max_people" property="maxPeople" />
+		<result column="hierarchy_id" property="hierarchyId" />
+		<result column="parent_id" property="parentId" />
+		<result column="parent_DEPTID" property="parentDEPTID" />
+		<result column="version" property="version" />
+		<result column="is_delete" property="isDelete" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+		<result column="type_code" property="typeCode" />
+		<result column="job_id" property="jobId" />
+	</resultMap>
+
+	<select id="findDeptByParam" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgExcel">
+		select fd_id id,DESCRSHORT label,parent_id parentId,job_id job,
+		job_id jobId,type_code typeCode,DEPTID code
+		from org_dept_pro where company = #{company} and type_code in
+		<foreach collection="typeCode" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<delete id="deleteDeptByCompany" parameterType="Object">
+		delete from org_dept_pro where company = #{company}
+	</delete>
+	<delete id="deleteJobByCompany" parameterType="Object">
+		delete from org_job_pro where company = #{company}
+	</delete>
+	
+	<update id="insertDeptByCompany" parameterType="Object">
+		insert into org_dept_pro(
+			fd_id,
+			EFFDT,
+			DEPTID,
+			DESCR,
+			DESCRSHORT,
+			COMPANY,
+			hierarchy_id,
+			parent_id,
+			parent_DEPTID,
+			version,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			type_code,
+			max_people,
+			order_value,
+			job_id
+		) select odh.fd_id,
+			odh.EFFDT,
+			odh.DEPTID,
+			odh.DESCR,
+			odh.DESCRSHORT,
+			odh.COMPANY,
+			odh.hierarchy_id,
+			odh.parent_id,
+			odh.parent_DEPTID,
+			odh.version,
+			odh.is_delete,
+			odh.doc_last_update_id,
+			odh.doc_last_update_time,
+			odh.doc_create_time,
+			odh.doc_creator_id,
+			odh.type_code,
+			odh.max_people,
+			odh.order_value,
+			odh.job_id from org_dept_history odh where odh.company = #{company} and odh.version=#{version}
+	</update>
+	
+	<update id="insertJobByCompany" parameterType="Object">
+		insert into org_job_pro(
+			fd_id,
+			dept_id,
+			dept_code,
+			dept_version,
+			job_name,
+			job_code,
+			job_type,
+			parent_id,
+			is_delete,
+			doc_last_update_id,
+			doc_last_update_time,
+			doc_create_time,
+			doc_creator_id,
+			manag_depts,
+			company,
+			is_manage,
+			remark,
+			max_compile,
+			max_people
+		) select 
+			ojh.fd_id,
+			ojh.dept_id,
+			ojh.dept_code,
+			ojh.dept_version,
+			ojh.job_name,
+			ojh.job_code,
+			ojh.job_type,
+			ojh.parent_id,
+			ojh.is_delete,
+			ojh.doc_last_update_id,
+			ojh.doc_last_update_time,
+			ojh.doc_create_time,
+			ojh.doc_creator_id,
+			ojh.manag_depts,
+			ojh.company,
+			ojh.is_manage,
+			ojh.remark,
+			ojh.max_compile,
+			ojh.max_people	
+		from org_job_history ojh where ojh.company = #{company} and ojh.dept_version = #{version}
+	</update>
+	
+	<!-- 按公司查询部门级及其主要职位 -->
+	<select id="findUserNodeJob" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgDeptJobDto">
+		SELECT DISTINCT
+			org_user.EMPLID AS userCode,
+			org_user.name AS userName,
+			org_dept_pro.DESCR AS longNodeName,
+			org_dept_pro.DEPTID AS nodeCode,
+			IFNULL( org_job_pro.is_manage, 0 ) isManage,
+			org_job_pro.job_code AS jobCode,
+			org_job_pro.job_name AS jobName,
+			CASE org_dept_pro.type_code 
+			WHEN '10' THEN
+			'管理层' 
+			WHEN '11' THEN
+			'管理层' 
+			WHEN '12' THEN
+			org_dept_pro.DESCRSHORT 
+			END AS nodeName
+		FROM
+			(((org_user
+			JOIN org_user_job)
+			JOIN org_job_pro)
+			JOIN org_dept_pro)
+		WHERE
+			org_user.EMPLID = org_user_job.emp_code AND
+			org_user_job.job_code = org_job_pro.job_code AND
+			org_job_pro.dept_code = org_dept_pro.DEPTID AND
+			org_user_job.is_parttime = 0 AND
+			org_dept_pro.COMPANY = #{company} AND
+			org_dept_pro.type_code IN ('12', '10', '11') order by org_job_pro.order_value ASC
+
+	</select>
+ 	<select id="findNodeJobByCompany" parameterType="Object" resultType="com.hwagain.org.dept.dto.OrgDeptJobDto">
+		SELECT
+			dept.DEPTID nodeCode,
+			CASE dept.type_code 
+			WHEN '10' THEN
+			'管理层' 
+			WHEN '11' THEN
+			'管理层' 
+			WHEN '12' THEN
+			dept.DESCRSHORT 
+			END AS nodeName,
+			dept.DESCR longNodeName,
+			job.job_code jobCode,
+			job.job_name jobName,
+			IFNULL( job.is_manage, 0 ) isManage 
+		FROM
+			org_dept_pro dept
+			LEFT JOIN org_job_pro job ON job.dept_code = dept.DEPTID 
+			AND job.job_type IN ( '22', '23', '24', '25', '26', '27' ) 
+			AND job.is_delete = FALSE 
+		WHERE
+			1 = 1 
+			AND dept.type_code IN ( '12', '10', '11' ) 
+			AND dept.company = #{company} 
+		ORDER BY
+			dept.DEPTID ASC,
+			job.order_value ASC
+	</select>
+	
+</mapper>

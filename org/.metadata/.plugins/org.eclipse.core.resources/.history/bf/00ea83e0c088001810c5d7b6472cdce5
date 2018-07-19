@@ -1,0 +1,28 @@
+package com.hwagain.org.register.service;
+
+import com.hwagain.org.register.entity.RegPersonal;
+import com.hwagain.org.register.dto.RegPersonalDto;
+import com.hwagain.framework.mybatisplus.service.IService;
+
+import java.util.List;
+
+import com.hwagain.framework.core.dto.PageDto;
+import com.hwagain.framework.core.dto.PageVO;
+import com.hwagain.framework.core.exception.CustomException;
+
+/**
+ * <p>
+ *  服务类
+ * </p>
+ *
+ * @author 
+ * @since 
+ */
+public interface IRegPersonalSaveService extends IService<RegPersonal> {
+
+	List<RegPersonalDto> findAll();
+	
+	
+
+	
+}

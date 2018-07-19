@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hwagain.org.task.mapper.OrgSyncPsMapper">
+
+	<!-- 通用查询映射结果 -->
+	<resultMap id="BaseResultMap" type="com.hwagain.org.task.entity.OrgSyncPs">
+		<id column="fd_id" property="fdId" />
+		<result column="type" property="type" />
+		<result column="formType" property="formType" />
+		<result column="dataType" property="dataType" />
+		<result column="dataId" property="dataId" />
+		<result column="json" property="json" />
+		<result column="requestXml" property="requestXml" />
+		<result column="resultXml" property="resultXml" />
+		<result column="doc_last_update_id" property="docLastUpdateId" />
+		<result column="doc_last_update_time" property="docLastUpdateTime" />
+		<result column="doc_create_time" property="docCreateTime" />
+		<result column="doc_creator_id" property="docCreatorId" />
+	</resultMap>
+</mapper>
